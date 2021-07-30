@@ -1,5 +1,7 @@
 from os.path import splitext
 from os import listdir
+
+import cv2
 import numpy as np
 from glob import glob
 import torch
@@ -25,13 +27,14 @@ class BasicDataset(Dataset):
 
     @classmethod
     def preprocess(cls, pil_img, scale):
-        w, h = pil_img.size
-        newW, newH = int(scale * w), int(scale * h)
-        assert newW > 0 and newH > 0, 'Scale is too small'
-        pil_img = pil_img.resize((newW, newH))
+        # w, h = pil_img.size
+        # newW, newH = int(scale * w), int(scale * h)
+        # assert newW > 0 and newH > 0, 'Scale is too small'
+        # pil_img = pil_img.resize((newW, newH))
 
-        img_nd = np.array(pil_img)
-
+        # img_nd = np.array(pil_img)
+        cv_image = np.array(pil_img)
+        img_nd = cv2.resize(cv_image, (256, 256), interpolation=cv2.INTER_AREA)
         if len(img_nd.shape) == 2:
             img_nd = np.expand_dims(img_nd, axis=2)
 
