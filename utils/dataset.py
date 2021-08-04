@@ -26,7 +26,7 @@ class BasicDataset(Dataset):
         return len(self.ids)
 
     @classmethod
-    def preprocess(cls, pil_img, scale):
+    def preprocess_img(cls, pil_img, scale):
         # w, h = pil_img.size
         # newW, newH = int(scale * w), int(scale * h)
         # assert newW > 0 and newH > 0, 'Scale is too small'
@@ -34,7 +34,7 @@ class BasicDataset(Dataset):
 
         # img_nd = np.array(pil_img)
         cv_image = np.array(pil_img)
-        img_nd = cv2.resize(cv_image, (256, 256), interpolation=cv2.INTER_AREA)
+        img_nd = cv2.resize(cv_image, (256, 256), interpolation=cv2.INTER_NEAREST_EXACT)
         if len(img_nd.shape) == 2:
             img_nd = np.expand_dims(img_nd, axis=2)
 
@@ -42,6 +42,32 @@ class BasicDataset(Dataset):
         img_trans = img_nd.transpose((2, 0, 1))
         if img_trans.max() > 1:
             img_trans = img_trans / 255
+
+        return img_trans
+
+    @classmethod
+    def preprocess_mask(cls, pil_img):
+        cv_image = np.array(pil_img)
+        img_nd = cv2.resize(cv_image, (256, 256), interpolation=cv2.INTER_NEAREST_EXACT)
+        if len(img_nd.shape) == 2:
+            img_nd = np.expand_dims(img_nd, axis=2)
+
+        # HWC to CHW
+        img_trans = img_nd.transpose((2, 0, 1))
+
+        # classes = [0, 128, 255]
+        # masks = np.zeros([3, img_trans.shape[1], img_trans.shape[2]])
+        # for class_id, channel in zip(classes, range(len(classes))):
+        #     mask_tmp = masks[channel, :, :].flatten()
+        #     orig = img_trans[0, :, :].flatten()
+        #     mask_tmp[np.where(orig == class_id)] = orig[np.where(orig == class_id)]
+        #     masks[channel, :, :] = np.reshape(mask_tmp, (img_trans.shape[1], img_trans.shape[2]))
+        #     if class_id == 0:
+        #         masks[channel, :, :] = np.reshape(mask_tmp, (img_trans.shape[1], img_trans.shape[2]))
+        #     else:
+        #         masks[channel, :, :] = np.reshape(mask_tmp, (img_trans.shape[1], img_trans.shape[2]))
+        #         masks[channel, :, :] = masks[channel, :, :] / class_id
+        img_trans = img_trans / 128
 
         return img_trans
 
@@ -60,8 +86,8 @@ class BasicDataset(Dataset):
         assert img.size == mask.size, \
             f'Image and mask {idx} should be the same size, but are {img.size} and {mask.size}'
 
-        img = self.preprocess(img, self.scale)
-        mask = self.preprocess(mask, self.scale)
+        img = self.preprocess_img(img, self.scale)
+        mask = self.preprocess_mask(mask)
 
         return {
             'image': torch.from_numpy(img).type(torch.FloatTensor),
