@@ -5,6 +5,7 @@ import os
 import numpy as np
 import torch
 import torch.nn.functional as F
+from glob import glob
 from PIL import Image
 from torchvision import transforms
 
@@ -20,7 +21,7 @@ def predict_img(net,
                 out_threshold=0.5):
     net.eval()
 
-    img = torch.from_numpy(BasicDataset.preprocess(full_img, scale_factor))
+    img = torch.from_numpy(BasicDataset.preprocess_img(full_img, scale_factor))
 
     img = img.unsqueeze(0)
     img = img.to(device=device, dtype=torch.float32)
@@ -55,8 +56,8 @@ def get_args():
     parser.add_argument('--model', '-m', default='MODEL.pth',
                         metavar='FILE',
                         help="Specify the file in which the model is stored")
-    parser.add_argument('--input', '-i', metavar='INPUT', nargs='+',
-                        help='filenames of input images', required=True)
+    parser.add_argument('--input', '-i', metavar='INPUT',
+                        help='path of the folder container input files', required=True)
 
     parser.add_argument('--output', '-o', metavar='INPUT', nargs='+',
                         help='Filenames of ouput images')
@@ -100,9 +101,11 @@ def mask_to_image(mask):
 if __name__ == "__main__":
     args = get_args()
     in_files = args.input
+    #TODO this should be universal format not just png
+    in_files = glob(in_files+'*.png')
     out_files = get_output_filenames(args)
 
-    net = UNet(n_channels=3, n_classes=1)
+    net = UNet(n_channels=3, n_classes=3)
 
     logging.info("Loading model {}".format(args.model))
 
