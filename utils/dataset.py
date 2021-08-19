@@ -67,7 +67,7 @@ class BasicDataset(Dataset):
         #     else:
         #         masks[channel, :, :] = np.reshape(mask_tmp, (img_trans.shape[1], img_trans.shape[2]))
         #         masks[channel, :, :] = masks[channel, :, :] / class_id
-        img_trans = img_trans / 128
+        img_trans = np.round(img_trans / 128)
 
         return img_trans
 
